@@ -7,7 +7,7 @@ from mongoengine import DoesNotExist
 from ..persistences.task import Task as TaskModel
 from ..utils.state import State
 from ..worker import task_executor
-
+from atr.api_const import TASK_NOT_FOUND , TASK_CREATED, TASK_FOUND
 namespace = Namespace(name="task", path="/")
 
 task_body = namespace.model("task", {
@@ -42,7 +42,7 @@ class Task(Resource):
         except Exception as exc:
             raise exc
 
-        return task, 201
+        return task, TASK_CREATED
 
 
 @namespace.route('/task/<uuid>')
@@ -51,5 +51,5 @@ class Task(Resource):
         try:
             task = TaskModel.objects.get(_id=uuid)
         except DoesNotExist:
-            abort(404, "Task Not Found")
-        return json.loads(task.to_json()), 200
+            abort(TASK_NOT_FOUND, "Task Not Found")
+        return json.loads(task.to_json()), TASK_FOUND

@@ -1,7 +1,6 @@
-from flask import  json
-
 import pytest
 from flask import Response as BaseResponse
+from flask import json
 from flask.testing import FlaskClient
 
 
