@@ -1,0 +1,36 @@
+---
+- hosts: all
+  connection: local
+  vars:
+    message: Hello
+    user:
+  gather_facts: no
+  tasks:
+  - name: Echo Hello
+    debug:
+      msg: "{{message}} - {{user}} - {{item}}"
+    with_items:
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsfdd
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
+    - dsf
