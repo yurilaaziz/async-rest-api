@@ -6,7 +6,8 @@ __all__ = ['api_client']
 
 
 def test_run_module(api_client):
-    payload = dict(module="ansible", args="")
+    payload = dict(module="delay", args={
+    })
 
     resp = api_client.post('tasks', data=payload)
     assert resp.status_code == TASK_CREATED
