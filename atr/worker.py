@@ -2,15 +2,17 @@ import logging
 import sys
 import traceback
 from datetime import datetime
-
+from atr.db import connect_db
 from celery import Celery
 from celery.app.task import Task
 
 from .modules import ModuleLoader
 from .persistences.task import Task as TaskModel
-from .utils.state import State
+from .utils.state import State, Initializing, Pending
 
 LOGGER = logging.getLogger(__name__)
+
+from uuid import uuid4
 
 
 class Executor(Task):
@@ -22,23 +24,27 @@ class Executor(Task):
         self.buffer_max = 5
         self.buffer_count = 0
 
-    def init(self, task):
-        self.state = State()
-        self.state.initializing()
-        self._module = ModuleLoader(module="ansible",
-                                    args=task.get('args'),
+    def init(self, module, args):
+        status = State(Pending)
+        self.persistence = TaskModel(_id=uuid4().hex)
+        self.persistence.module = module
+        self.persistence.time_start = datetime.utcnow()
+        self.persistence.args = args
+        self.persistence.status = str(status)
+        self.persistence.save()
+        return self.persistence._id
+
+    def recover(self, uuid):
+        self.persistence = TaskModel.objects.get(_id=uuid)
+        self.state = State(self.persistence.status)
+        self.state.switch(Initializing)
+        self._module = ModuleLoader(module=self.persistence.module,
+                                    args=self.persistence.args,
                                     state=self.state,
 
                                     notification_handler=self.notify)
-
-        self._uuid = task.get('uuid')
-        self.persistence = TaskModel(_id=self._uuid)
-
-        self.persistence.module = task.get('module')
-        self.persistence.time_start = datetime.utcnow()
-        self.persistence.status = str(self.state)
+        self.persistence.state = str(self.state)
         self.persistence.save()
-        return self._uuid
 
     def notify(self, output=None, state=None, error=None, commit=None):
         if output:
@@ -57,10 +63,18 @@ class Executor(Task):
             self.persistence.save()
             self.buffer_max = 0
 
-    def run(self, task):
-        self.init(task)
+    def run(self, uuid):
+
+        try:
+            self.recover(uuid)
+        except Exception as exc:
+            LOGGER.exception(exc)
+            raise exc
+
         try:
             _ = self._module()
+            if not self.state.is_final():
+                self.state.success()
         except Exception as exc:
             self.state.error()
             LOGGER.exception(exc)
@@ -70,7 +84,7 @@ class Executor(Task):
             self.notify(state=self.state, commit=True)
 
 
-# connect_db()
+connect_db()
 
 # celery ignore result false
 # broker url amqp://

@@ -1,14 +1,17 @@
 from importlib import import_module
 from tempfile import TemporaryDirectory
 
+from cerberus import Validator
+
+from atr.exceptions.module import TaskArgsValidationError
+
 
 class ModuleLoader:
     def __init__(self, module, args,
                  state,
                  notification_handler):
 
-        module_split = module.rsplit('.', 1)
-        if len(module_split) == 1:
+        if "." not in module:
             module_package = "atr.modules" + "." + module
         else:
             module_package = module
@@ -17,6 +20,9 @@ class ModuleLoader:
         self.module.args = args
         self.module.notify = notification_handler
         self.module.state = state
+        v = Validator(self.module.schema)
+        if not v.validate(args):
+            raise TaskArgsValidationError(str([e.schema_path for e in v._errors]))
 
     def __call__(self):
         with TemporaryDirectory() as temp_dir:

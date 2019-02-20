@@ -1,7 +1,7 @@
 import os
+import shutil
 from collections import namedtuple
 
-import ansible
 import git
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory.manager import InventoryManager
@@ -10,20 +10,6 @@ from ansible.utils.display import Display as DisplayBase
 from ansible.vars.manager import VariableManager
 
 from .base import BaseModule
-
-
-class Display(DisplayBase):
-    def display(self, msg, color=None, stderr=False, screen_only=False, log_only=False):
-        """ Forward output to database"""
-        # print(">> ({}) >> {}".format(len(msg),msg))
-        pass
-
-
-ansible.executor.playbook_executor.display = Display(verbosity=3)
-ansible.parsing.vault.display = Display(verbosity=3)
-
-import shutil
-import tempfile
 
 
 def copy_project(src, dest):
@@ -38,44 +24,56 @@ def copy_project(src, dest):
 
 
 class Module(BaseModule):
+    schema = {
+        "playbook": {'type': 'string', 'required': True},
+        "src": {'type': 'string', 'required': True},
+        "extra_vars": {'type': 'dict', 'required': False},
+        "inventory": {'type': 'string', 'required': False},
+        "options": {'type': 'dict', 'required': False},
+    }
+
     def main(self):
-        playbook = "site.yml"
-        src = "/Users/yuri/workspace/flask-cloudnative/examples/ansible"
-        tmp_dir = tempfile.mkdtemp()
-        project_src = os.path.join(tmp_dir, "src")
-        extra_vars = {'user': 'mywebserver'}
+        playbook = self.args.get("playbook")
+        src = self.args.get("src")
+        project_src = os.path.join(self.temp_dir, "src")
+        extra_vars = self.args.get("extra_vars", {})
+        inventory = self.args.get("inventory", "inventory")
+        options = self.args.get("options", {})
 
         Options = namedtuple('Options',
                              ['listtags', 'listtasks', 'listhosts', 'syntax', 'connection', 'module_path', 'forks',
                               'remote_user', 'private_key_file', 'ssh_common_args', 'ssh_extra_args',
                               'sftp_extra_args', 'scp_extra_args', 'become', 'become_method', 'become_user',
                               'verbosity', 'check', 'diff'])
-        options = Options(listtags=False,
-                          listtasks=False,
-                          listhosts=False,
-                          syntax=False,
-                          connection='ssh',
-                          module_path=None,
-                          forks=100,
-                          remote_user="barberousse",
-                          private_key_file=None,
-                          ssh_common_args=None,
-                          ssh_extra_args=None,
-                          sftp_extra_args=None,
-                          scp_extra_args=None,
-                          become=True,
-                          become_method='sudo',
-                          become_user='root',
-                          verbosity=None,
-                          check=False,
-                          diff=False)
-        for key, value in self.args.get("options", {}).items():
-            setattr(options, key, value)
+
+        playbook_options = Options(listtags=False,
+                                   listtasks=False,
+                                   listhosts=False,
+                                   syntax=False,
+                                   connection='ssh',
+                                   module_path=None,
+                                   forks=100,
+                                   remote_user="barberousse",
+                                   private_key_file=None,
+                                   ssh_common_args=None,
+                                   ssh_extra_args=None,
+                                   sftp_extra_args=None,
+                                   scp_extra_args=None,
+                                   become=True,
+                                   become_method='sudo',
+                                   become_user='root',
+                                   verbosity=None,
+                                   check=False,
+                                   diff=False)
+
+        for key, value in options.items():
+            setattr(playbook_options, key, value)
 
         def display(cls, msg, **kwargs):
             """ Forward output to module notification handler"""
             return self.notify(msg)
 
+        DisplayBase.display = display
         DisplayBase.display = display
 
         if src.startswith("git+"):
@@ -84,7 +82,7 @@ class Module(BaseModule):
         else:
             copy_project(src, project_src)
 
-        inventory_file = project_src + "/inventory"
+        inventory_file = project_src + "/" + inventory
         playbook_path = project_src + "/" + playbook
 
         loader = DataLoader()
@@ -97,7 +95,7 @@ class Module(BaseModule):
             self.state.failed()
             return
 
-        variable_manager.extra_vars = extra_vars  # This can accomodate various other command line arguments.`
+        variable_manager.extra_vars = extra_vars
 
         passwords = {}
 
@@ -105,7 +103,7 @@ class Module(BaseModule):
                                 inventory=inventory_manager,
                                 variable_manager=variable_manager,
                                 loader=loader,
-                                options=options,
+                                options=playbook_options,
                                 passwords=passwords)
         # global display
 
