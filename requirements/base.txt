@@ -2,3 +2,4 @@ flask
 flask-restplus
 celery
 mongoengine
+cerberus
