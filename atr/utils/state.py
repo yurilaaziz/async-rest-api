@@ -65,7 +65,7 @@ class State:
         return len(self.state.allowed) == 0
 
     def is_equal(self, state):
-        return self.state ==  state
+        return self.state == state
 
     def switch(self, new_state):
         if not issubclass(new_state, BaseState):

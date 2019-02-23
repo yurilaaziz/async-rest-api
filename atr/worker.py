@@ -2,10 +2,11 @@ import logging
 import sys
 import traceback
 from datetime import datetime
-from atr.db import connect_db
+
 from celery import Celery
 from celery.app.task import Task
 
+from atr.db import connect_db
 from .modules import ModuleLoader
 from .persistences.task import Task as TaskModel
 from .utils.state import State, Initializing, Pending

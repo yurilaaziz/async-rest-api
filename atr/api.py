@@ -9,4 +9,3 @@ api = Api(app)
 api.add_namespace(namespace)
 
 connect_db()
-
