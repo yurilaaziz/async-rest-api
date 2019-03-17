@@ -1,12 +1,12 @@
 import json
 
-from atr.persistences.task import DoesNotExist
-from atr.persistences.task import Task as TaskModel
-from atr.worker import task_executor
+from bareberousse.persistences.task import DoesNotExist
+from bareberousse.persistences.task import Task as TaskModel
+from bareberousse.worker import task_executor
 
 
 class Controller:
-    def __init__(self, async_mode=False, **kwargs):
+    def __init__(self, async_mode=True, **kwargs):
         self.async_mode = async_mode
         self.options = kwargs
 

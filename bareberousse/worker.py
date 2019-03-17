@@ -6,7 +6,7 @@ from datetime import datetime
 from celery import Celery
 from celery.app.task import Task
 
-from atr.db import connect_db
+from bareberousse.db import connect_db
 from .modules import ModuleLoader
 from .persistences.task import Task as TaskModel
 from .utils.state import State, Initializing, Pending
@@ -99,5 +99,5 @@ connect_db()
 # celery routes path to class queue tasks
 
 celery = Celery()
-celery.config_from_object("atr.celery_config")
+celery.config_from_object("bareberousse.celery_config")
 task_executor = celery.register_task(Executor())

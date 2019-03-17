@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 
 from cerberus import Validator
 
-from atr.exceptions.module import TaskArgsValidationError
+from bareberousse.exceptions.module import TaskArgsValidationError
 
 
 class ModuleLoader:
@@ -12,7 +12,7 @@ class ModuleLoader:
                  notification_handler):
 
         if "." not in module:
-            module_package = "atr.modules" + "." + module
+            module_package = "bareberousse.modules" + "." + module
         else:
             module_package = module
 

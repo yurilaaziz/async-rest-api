@@ -1,9 +1,9 @@
 from flask_restplus import Namespace, Resource, fields, reqparse, abort
 
-from atr.api_const import TASK_NOT_FOUND, TASK_CREATED, TASK_FOUND, TASK_ERROR
+from bareberousse.api_const import TASK_NOT_FOUND, TASK_CREATED, TASK_FOUND, TASK_ERROR
 
 namespace = Namespace(name="task", path="/")
-from atr.controller import Controller
+from bareberousse.controller import Controller
 
 task_body = namespace.model("task", {
     'module': fields.String(description="Module name", required=True),
