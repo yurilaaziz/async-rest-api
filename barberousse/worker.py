@@ -6,7 +6,7 @@ from datetime import datetime
 from celery import Celery
 from celery.app.task import Task
 
-from bareberousse.db import connect_db
+from barberousse.db import connect_db
 from .modules import ModuleLoader
 from .persistences.task import Task as TaskModel
 from .utils.state import State, Initializing, Pending
@@ -91,13 +91,13 @@ class Executor(Task):
             self.notify(state=self.state, commit=True)
 
 
+from .config import config_worker as config
+
 connect_db()
 
-# celery ignore result false
-# broker url amqp://
-# celery result backend
-# celery routes path to class queue tasks
-
 celery = Celery()
-celery.config_from_object("bareberousse.celery_config")
+
+celery.conf.update(**config)
+
+# celery.config_from_object("barberousse.celery_config")
 task_executor = celery.register_task(Executor())

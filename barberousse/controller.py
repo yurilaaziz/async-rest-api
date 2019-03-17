@@ -1,8 +1,8 @@
 import json
 
-from bareberousse.persistences.task import DoesNotExist
-from bareberousse.persistences.task import Task as TaskModel
-from bareberousse.worker import task_executor
+from barberousse.persistences.task import DoesNotExist
+from barberousse.persistences.task import Task as TaskModel
+from barberousse.worker import task_executor
 
 
 class Controller:
