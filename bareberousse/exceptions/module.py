@@ -1,6 +1,4 @@
-class CustomBaseException(Exception):
-    pass
-
+from . import CustomBaseException
 
 class TaskArgsValidationError(CustomBaseException):
     pass

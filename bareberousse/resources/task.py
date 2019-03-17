@@ -1,10 +1,6 @@
-import json
-
 from flask_restplus import Namespace, Resource, fields, reqparse, abort
-from mongoengine import DoesNotExist
 
 from atr.api_const import TASK_NOT_FOUND, TASK_CREATED, TASK_FOUND, TASK_ERROR
-from ..persistences.task import Task as TaskModel
 
 namespace = Namespace(name="task", path="/")
 from atr.controller import Controller
@@ -18,8 +14,8 @@ task_body = namespace.model("task", {
 @namespace.route('/tasks')
 class Task(Resource):
     def get(self):
-        tasks = TaskModel.objects()
-        return json.loads(tasks.to_json())
+        controller = Controller()
+        return controller.get_tasks()
 
     @namespace.doc(body=task_body)
     def post(self):
@@ -46,8 +42,9 @@ class Task(Resource):
 @namespace.route('/task/<uuid>')
 class Task(Resource):
     def get(self, uuid):
-        try:
-            task = TaskModel.objects.get(_id=uuid)
-        except DoesNotExist:
+        controller = Controller()
+        task = controller.get_task(uuid)
+        if not task:
             abort(TASK_NOT_FOUND, "Task Not Found")
-        return json.loads(task.to_json()), TASK_FOUND
+        else:
+            return task, TASK_FOUND

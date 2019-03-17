@@ -2,7 +2,7 @@ class BaseState:
     allowed = []
 
     def __str__(self):
-        return self.__name__
+        return self.__class__.__name__
 
     def __dict__(self):
         return self.__str__()
