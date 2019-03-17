@@ -1,7 +1,7 @@
 from time import sleep
 
-from bareberousse.api_const import TASK_CREATED, TASK_FOUND
-from bareberousse.utils.state import State
+from barberousse.api_const import TASK_CREATED, TASK_FOUND
+from barberousse.utils.state import State
 
 
 def test_run_module(api_client):

@@ -1,6 +1,6 @@
-from bareberousse.persistences.task import Task as TaskModel
-from bareberousse.utils.state import State
-from bareberousse.worker import task_executor
+from barberousse.persistences.task import Task as TaskModel
+from barberousse.utils.state import State
+from barberousse.worker import task_executor
 
 TEST_MODULE = "echo"
 

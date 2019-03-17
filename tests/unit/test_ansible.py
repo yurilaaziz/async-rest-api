@@ -1,4 +1,4 @@
-from bareberousse.utils.state import State
+from barberousse.utils.state import State
 
 
 def test_git_clone_project(controller):

@@ -1,4 +1,5 @@
-from mongoengine import *
+from mongoengine import Document
+from mongoengine import StringField, DictField, DateTimeField, FloatField, ListField
 
 
 class Task(Document):

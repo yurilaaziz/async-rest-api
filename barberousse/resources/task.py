@@ -1,9 +1,9 @@
 from flask_restplus import Namespace, Resource, fields, reqparse, abort
 
 from barberousse.api_const import TASK_NOT_FOUND, TASK_CREATED, TASK_FOUND, TASK_ERROR
+from barberousse.controller import Controller
 
 namespace = Namespace(name="task", path="/")
-from barberousse.controller import Controller
 
 task_body = namespace.model("task", {
     'module': fields.String(description="Module name", required=True),
@@ -12,7 +12,7 @@ task_body = namespace.model("task", {
 
 
 @namespace.route('/tasks')
-class Task(Resource):
+class Tasks(Resource):
     def get(self):
         controller = Controller()
         return controller.get_tasks()

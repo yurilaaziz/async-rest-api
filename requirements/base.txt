@@ -1,5 +1,6 @@
 flask
 flask-restplus
+config42
 celery
 mongoengine
 cerberus
