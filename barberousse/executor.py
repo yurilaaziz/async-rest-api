@@ -25,6 +25,11 @@ class Executor(Task):
         self._raise_error = False
 
     def init(self, module, args, options=None):
+        _ = ModuleLoader(module=module,
+                         args=args,
+                         state=None,
+                         notification_handler=None)
+
         status = State(Pending)
         self.persistence = TaskModel(_id=uuid4().hex)
         self.persistence.module = module
@@ -35,6 +40,7 @@ class Executor(Task):
 
         for key, value in (options or {}).items():
             setattr(self, key, value)
+
         return self.persistence._id
 
     def recover(self, uuid):
@@ -46,7 +52,6 @@ class Executor(Task):
         self._module = ModuleLoader(module=self.persistence.module,
                                     args=self.persistence.args,
                                     state=self.state,
-
                                     notification_handler=self.notify)
 
     def notify(self, output=None, state=None, error=None, commit=None):

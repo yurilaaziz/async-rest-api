@@ -34,8 +34,9 @@ if BARBEROUSSE_WORKER_ETCD:
         if not BARBEROUSSE_WORKER_CONFIG_FILE:
             raise exc
 
-config_worker["broker_url"] = config_worker["broker"]["broker_url"].format(
-    **config_worker.get("broker"))
+_broker = config_worker.pop("broker")
+config_worker["broker_url"] = _broker["broker_url"].format(**_broker)
+del _broker
 
 config_db = ConfigManager(path=BARBEROUSSE_PERSITENCE_CONFIG_FILE_DEFAULT).as_dict()
 

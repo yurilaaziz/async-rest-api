@@ -1,3 +1,4 @@
+from flask import request
 from flask_restplus import Namespace, Resource, fields, reqparse, abort
 
 from barberousse.api_const import TASK_NOT_FOUND, TASK_CREATED, TASK_FOUND, TASK_ERROR
@@ -9,6 +10,8 @@ task_body = namespace.model("task", {
     'module': fields.String(description="Module name", required=True),
     'args': fields.Raw(description="Module", required=False)
 })
+
+module_body = namespace.model("module", {})
 
 
 @namespace.route('/tasks')
@@ -34,6 +37,28 @@ class Tasks(Resource):
         except Exception as exc:
             task = {
                 'module': args.get('module'),
+                'message': str(exc),
+            }
+            return task, TASK_ERROR
+
+
+@namespace.route('/tasks/<module>')
+class TaskModule(Resource):
+    @namespace.doc(body=module_body)
+    def post(self, module):
+        parser = reqparse.RequestParser()
+        args = request.json
+        controller = Controller()
+        try:
+            task_id = controller.create_task(module, args)
+            task = {
+                'module': module,
+                'id': task_id,
+            }
+            return task, TASK_CREATED
+        except Exception as exc:
+            task = {
+                'module': module,
                 'message': str(exc),
             }
             return task, TASK_ERROR

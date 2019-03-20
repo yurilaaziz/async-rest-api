@@ -1,6 +1,7 @@
 import json
 
 from mongoengine import DoesNotExist
+
 from barberousse.persistences.task import Task as TaskModel
 from barberousse.worker import task_executor
 
