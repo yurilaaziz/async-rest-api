@@ -46,7 +46,6 @@ class Tasks(Resource):
 class TaskModule(Resource):
     @namespace.doc(body=module_body)
     def post(self, module):
-        parser = reqparse.RequestParser()
         args = request.json
         controller = Controller()
         try:
