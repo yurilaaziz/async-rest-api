@@ -1,0 +1,21 @@
+sudo: false
+language: python
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+services:
+- docker
+before_install:
+- docker-compose up -d
+
+python:
+- 3.5
+- 3.6
+- 3.7-dev
+install: pip install tox-travis coverage
+script: tox
+after_success:
+- bash <(curl -s https://codecov.io/bash)
