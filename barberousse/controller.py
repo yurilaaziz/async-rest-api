@@ -10,9 +10,13 @@ from barberousse.worker import task_executor
 
 class Controller:
     def __init__(self, async_mode=None, **kwargs):
-        if not async_mode:
-            self.async_mode = BARBEROUSSE_STANDALONE
         self.logger = logging.getLogger(__name__)
+        if not async_mode:
+            self.async_mode = BARBEROUSSE_STANDALONE == 0
+
+        self.logger.info("Initializing controller in {} mode".format(
+            "Standalone" if not self.async_mode else "Distributed"
+        ))
 
         self.async_mode = async_mode
         self.options = kwargs
@@ -29,8 +33,10 @@ class Controller:
 
         if not self.async_mode:
             _ = task_executor.run(uuid)
+            self.logger.info("Module {} starts in synchronous mode".format(module))
         else:
             _ = task_executor.delay(uuid)
+            self.logger.info("Module {} starts in Asynchronous mode".format(module))
 
         return uuid
 

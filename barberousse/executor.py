@@ -11,6 +11,8 @@ from .persistences.task import Task as TaskModel
 from .utils.state import State, Initializing, Pending
 
 LOGGER = logging.getLogger(__name__)
+COMMIT_MSG = {False: "sent",
+              True: "dalyed"}
 
 
 class Executor(Task):
@@ -23,6 +25,7 @@ class Executor(Task):
         self.buffer_count = 0
         self._disable_recover = False
         self._raise_error = False
+        self.logger = logging.getLogger(__name__)
 
     def init(self, module, args, options=None):
         _ = ModuleLoader(module=module,
@@ -41,6 +44,9 @@ class Executor(Task):
         for key, value in (options or {}).items():
             setattr(self, key, value)
 
+        self.logger.info("Persistence successful for task {}, module {} with {} args"
+                         "".format(self.persistence._id, self.persistence.module,
+                                   len(self.persistence.args)))
         return self.persistence._id
 
     def recover(self, uuid):
@@ -53,29 +59,48 @@ class Executor(Task):
                                     args=self.persistence.args,
                                     state=self.state,
                                     notification_handler=self.notify)
+        self.logger.info("Recover successful for task {}, module {} with {} args"
+                         "".format(self.persistence._id, self.persistence.module,
+                                   len(self.persistence.args)))
 
     def notify(self, output=None, state=None, error=None, commit=None):
+        to_commit = commit or (commit is None and self.buffer_count > self.buffer_max)
+
         if output:
             self.persistence.traceback.append(output)
             self.buffer_count += 1
+            self.logger.debug("Notification {} : {} traceback updated with {} chars"
+                              "".format(COMMIT_MSG[to_commit], self.persistence._id,
+                                        len(output)))
         if state:
             self.persistence.status = str(self.state)
             self.buffer_count += 1
+            self.logger.debug("Notification {} : {} state updated to {}"
+                              "".format(COMMIT_MSG[to_commit], self.persistence._id, str(self.state)))
+
         if error:
             self.persistence.error = error
-        if commit or (commit is None and self.buffer_count > self.buffer_max):
+            self.logger.debug("Notification error {} : {}"
+                              "".format(COMMIT_MSG[to_commit], self.persistence._id))
+        if to_commit:
             self.persistence.time_finish = datetime.utcnow()
             self.persistence.time = \
                 (self.persistence.time_finish - self.persistence.time_start).total_seconds()
             self.persistence.save()
             self.buffer_max = 0
+            self.logger.debug("Notification buffer has been flushed for task {}"
+                              "".format(self.persistence._id))
 
     def run(self, uuid):
         try:
+            self.logger.info("Recovering task {}".format(uuid))
             self.recover(uuid)
         except Exception as exc:
+            self.logger.error("Recovering failed for task {}".format(uuid))
             LOGGER.exception(exc)
-            raise exc
+            if self._raise_error:
+                raise exc
+            return
 
         try:
             _ = self._module()
@@ -83,8 +108,8 @@ class Executor(Task):
                 self.state.success()
         except Exception as exc:
             self.state.error()
-
-            LOGGER.exception(exc)
+            self.logger.error("Unhandled exception was thrown by task {}".format(uuid))
+            self.logger.exception(exc)
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.notify(error=traceback.format_exception(exc_type, exc_value, exc_tb))
             if self._raise_error:
