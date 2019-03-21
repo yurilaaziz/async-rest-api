@@ -1,21 +1,30 @@
 import json
+import logging
 
 from mongoengine import DoesNotExist
 
+from barberousse.environement import BARBEROUSSE_STANDALONE
 from barberousse.persistences.task import Task as TaskModel
 from barberousse.worker import task_executor
 
 
 class Controller:
-    def __init__(self, async_mode=True, **kwargs):
+    def __init__(self, async_mode=None, **kwargs):
+        if not async_mode:
+            self.async_mode = BARBEROUSSE_STANDALONE
+        self.logger = logging.getLogger(__name__)
+
         self.async_mode = async_mode
         self.options = kwargs
 
     def create_task(self, module, args):
-
+        self.logger.debug("Trying to create {} with {} args".format(module, len(args)))
         try:
             uuid = task_executor.init(module, args, self.options)
+            self.logger.debug("Module {} has been initialized".format(module, len(args)))
         except Exception as exc:
+            self.logger.error("Module {} failed while initializing ".format(module))
+            self.logger.exception(exc)
             raise exc
 
         if not self.async_mode:

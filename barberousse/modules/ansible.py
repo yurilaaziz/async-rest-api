@@ -74,7 +74,6 @@ class Module(BaseModule):
             return self.notify(msg)
 
         DisplayBase.display = display
-        DisplayBase.display = display
 
         if src.startswith("git+"):
             project_git_url = src[4:]

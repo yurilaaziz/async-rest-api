@@ -1,17 +1,22 @@
 {
-  "ignore_result": false,
-  "result_backend": "amqp",
-  "broker": {
-    "username": "barberousse",
-    "password": "barberousse",
-    "host": "127.0.0.1",
-    "port": 5673,
-    "protocol": "amqp",
-    "broker_url": "{protocol}://{username}:{password}@{host}:{port}"
+  "logging": {
+    "level": "DEBUG"
   },
-  "task_routes": {
-    "barberousse.executor.Executor": {
-      "queue": "tasks"
+  "broker": {
+    "ignore_result": false,
+    "result_backend": "amqp",
+    "connection": {
+      "username": "barberousse",
+      "password": "barberousse",
+      "host": "127.0.0.1",
+      "port": 5673,
+      "protocol": "amqp",
+      "broker_url": "{protocol}://{username}:{password}@{host}:{port}"
+    },
+    "task_routes": {
+      "barberousse.executor.Executor": {
+        "queue": "tasks"
+      }
     }
   }
 }
