@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from celery.app.task import Task
 
-from .modules import ModuleLoader
+from .loader import ModuleLoader
 from .persistences.task import Task as TaskModel
 from .utils.state import State, Initializing, Pending
 

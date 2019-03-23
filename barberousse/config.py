@@ -47,7 +47,7 @@ for component in components:
         else:
             cwd = os.getcwd()
             config_path = cwd + "/" + component["file"]
-            _config.update(ConfigManager(path=config_path.replace('//', '/')).as_dict())
+        _config.update(ConfigManager(path=config_path.replace('//', '/')).as_dict())
         LOGGER.info("Setting local configuration from {} for {} : OK".format(component["file"], component["name"]))
 
     if component["etcd"]:
@@ -71,6 +71,5 @@ for component in components:
 config_worker = config["worker"]
 config_db = config["database"]
 config_gateway = config["gateway"]
-
 _connection = config_worker["broker"].pop("connection")
 config_worker["broker"]["broker_url"] = _connection["broker_url"].format(**_connection)

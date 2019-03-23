@@ -62,7 +62,7 @@
       "username": "barberousse",
       "password": "barberousse",
       "host": "127.0.0.1",
-      "port": 5673,
+      "port": 5672,
       "protocol": "amqp",
       "broker_url": "{protocol}://{username}:{password}@{host}:{port}"
     },
