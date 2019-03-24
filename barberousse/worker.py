@@ -6,9 +6,10 @@ from barberousse.db import connect_db
 from barberousse.executor import Executor
 from .config import config_worker as config
 
-logging.basicConfig(level="INFO")
-logging.config.dictConfig((config.get('logging')))
-
+try:
+    logging.config.dictConfig(config.get('logging'))
+except:
+    logging.getLogger(__name__).info("Failed to set custom logging configuration")
 connect_db()
 celery = Celery()
 celery.conf.update(**config.get('broker'))

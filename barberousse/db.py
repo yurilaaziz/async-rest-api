@@ -8,10 +8,11 @@ LOGGER = getLogger(__name__)
 
 
 def connect_db():
+    _connection = config.get("connection")
     LOGGER.debug("Connecting to persistence backend {username}@{host}:{port}/{db}".format(
-        username=config.get('username'),
-        host=config.get('host'),
-        port=config.get('port'),
-        db=config.get('db')
+        username=_connection.get('username'),
+        host=_connection.get('host'),
+        port=_connection.get('port'),
+        db=_connection.get('db')
     ))
-    connect(**config)
+    connect(**_connection)

@@ -3,73 +3,52 @@ import os
 
 from config42 import ConfigManager
 
-from barberousse.default_config.constants import BARBEROUSSE_WORKER_CONFIG_FILE_DEFAULT, \
-    BARBEROUSSE_PERSITENCE_CONFIG_FILE_DEFAULT, BARBEROUSSE_GATEWAY_CONFIG_FILE_DEFAULT
-from barberousse.environement import BARBEROUSSE_WORKER_CONFIG_FILE, BARBEROUSSE_PERSITENCE_CONFIG_FILE, \
-    BARBEROUSSE_WORKER_CONFIG_ETCD, BARBEROUSSE_PERSITENCE_CONFIG_ETCD, BARBEROUSSE_GATEWAY_CONFIG_FILE, \
-    BARBEROUSSE_GATEWAY_CONFIG_ETCD, BARBEROUSSE_DEBUG
+from barberousse.default_config.constants import DEFAULT_CONFIG
 
-logging.basicConfig(level=logging.DEBUG if BARBEROUSSE_DEBUG else logging.INFO)
+env_config = ConfigManager(prefix="BARBEROUSSE", defaults=DEFAULT_CONFIG)
 
-components = [
-    {
-        "name": "worker",
-        "default": BARBEROUSSE_WORKER_CONFIG_FILE_DEFAULT,
-        "file": BARBEROUSSE_WORKER_CONFIG_FILE,
-        "etcd": BARBEROUSSE_WORKER_CONFIG_ETCD,
-
-    },
-    {
-        "name": "database",
-        "default": BARBEROUSSE_PERSITENCE_CONFIG_FILE_DEFAULT,
-        "file": BARBEROUSSE_PERSITENCE_CONFIG_FILE,
-        "etcd": BARBEROUSSE_PERSITENCE_CONFIG_ETCD,
-
-    },
-    {
-        "name": "gateway",
-        "default": BARBEROUSSE_GATEWAY_CONFIG_FILE_DEFAULT,
-        "file": BARBEROUSSE_GATEWAY_CONFIG_FILE,
-        "etcd": BARBEROUSSE_GATEWAY_CONFIG_ETCD,
-
-    }
-]
+logging.basicConfig(level=logging.DEBUG if env_config.get("debug") else logging.INFO)
 
 LOGGER = logging.getLogger(__name__)
 
 config = {}
-for component in components:
-    _config = ConfigManager(path=component.get("default")).as_dict()
-    LOGGER.info("Setting default configuration for {} : OK".format(component["name"]))
-    if component.get("file"):
-        if component["file"].startswith("/"):
-            config_path = component["file"]
-        else:
-            cwd = os.getcwd()
-            config_path = cwd + "/" + component["file"]
-        _config.update(ConfigManager(path=config_path.replace('//', '/')).as_dict())
-        LOGGER.info("Setting local configuration from {} for {} : OK".format(component["file"], component["name"]))
+for component in ["worker", "database", "gateway"]:
+    config_file = env_config.get(component + ".config.file")
+    config_etcd = env_config.get(component + ".config.etcd")
 
-    if component["etcd"]:
-        if not component["etcd"].get("keyspace"):
+    _config = env_config.get(component)
+    LOGGER.info("Setting configuration from Environment for {}, {} vars loaded: OK".format(component, len(_config)))
+    if config_file.startswith("/"):
+        config_path = config_file
+    else:
+        cwd = os.getcwd()
+        config_path = cwd + "/" + config_file
+    _config.update(ConfigManager(path=config_path.replace('//', '/')).as_dict())
+    LOGGER.info("Setting configuration from {} for {} : OK".format(config_file, component))
+
+    if config_etcd:
+        if not config_etcd.get("keyspace"):
             raise Exception("etcd Keyspace is mandatory")
         try:
-            _config.update(ConfigManager(**component["etcd"]).as_dict())
+            _config.update(ConfigManager(**config_etcd).as_dict())
             LOGGER.info(
-                "Setting external configuration from {} for {} : OK".format(component["file"], component["name"]))
+                "Setting external configuration from {} for {} : OK".format(config_file, component))
         except Exception as exc:
             LOGGER.error(
                 "Setting external configuration from ({}) for {} : NOT OK".format(
-                    ",".join({key + "=" + value for key, value in component["etcd"].item() or {}}),
-                    component["name"]))
+                    ",".join({key + "=" + value for key, value in config_etcd.item() or {}}),
+                    component))
 
             LOGGER.exception(exc)
             raise exc
-    config.update({component["name"]: _config})
-    LOGGER.info("Setting of the {} has been finished successfully".format(component["name"]))
+    config.update({component: _config})
+    LOGGER.info("Setting of the {} has been finished successfully".format(component))
 
 config_worker = config["worker"]
 config_db = config["database"]
 config_gateway = config["gateway"]
 _connection = config_worker["broker"].pop("connection")
+
+if not _connection.get("broker_url"):
+    _connection["broker_url"] = "{protocol}://{username}:{password}@{host}:{port}"
 config_worker["broker"]["broker_url"] = _connection["broker_url"].format(**_connection)
