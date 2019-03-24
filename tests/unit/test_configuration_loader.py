@@ -1,13 +1,13 @@
 def test_configuration_content():
     from barberousse.config import config
-    assert "worker" in config
-    assert "broker" in config["worker"]
-    assert "logging" in config["worker"]
-    assert "broker_url" in config["worker"]["broker"]
-    assert "database" in config
-    assert "gateway" in config
-    assert "logging" in config["gateway"]
-    assert "absent_component" not in config
+    assert config.get("worker") is not None
+    assert config.get("worker.broker") is not None
+    assert config.get("worker.logging") is not None
+    assert config.get("worker.broker.broker_url") is not None
+    assert config.get("database") is not None
+    assert config.get("gateway") is not None
+    assert config.get("gateway.logging") is not None
+    assert config.get("absent_component") is None
 
 
 def test_set_configuration_file(cwd):
@@ -22,5 +22,5 @@ def test_set_configuration_file(cwd):
     from barberousse.config import config
     from config42 import ConfigManager
     local_config = ConfigManager(path=config_path).as_dict()
-    assert "broker_url" in config["worker"]["broker"]
-    assert str(local_config["connection"]["port"]) in config["worker"]["broker"]["broker_url"]
+    assert config.get("worker.broker.broker_url") is not None
+    assert str(local_config["connection"]["port"]) in config.get("worker.broker.broker_url")

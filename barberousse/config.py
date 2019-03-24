@@ -5,33 +5,33 @@ from config42 import ConfigManager
 
 from barberousse.default_config import DEFAULT_CONFIG
 
-env_config = ConfigManager(prefix="BARBEROUSSE", defaults=DEFAULT_CONFIG)
-
+env_config = ConfigManager(prefix="BARBEROUSSE")
 logging.basicConfig(level=logging.DEBUG if env_config.get("debug") else logging.INFO)
-
 LOGGER = logging.getLogger(__name__)
+if env_config.get("configcache"):
+    config = ConfigManager(path=env_config.get("configcache"), defaults=DEFAULT_CONFIG)
+else:
+    config = ConfigManager(defaults=DEFAULT_CONFIG)
 
-config = DEFAULT_CONFIG
+config.set_many(env_config.as_dict())
 for component in ["worker", "database", "gateway"]:
-    config_file = env_config.get(component + ".config.file")
-    config_etcd = env_config.get(component + ".config.etcd")
+    config_file = config.get(component + ".config.file")
+    config_etcd = config.get(component + ".config.etcd")
 
-    _config = env_config.get(component)
-    LOGGER.info("Setting configuration from Environment for {}, {} vars loaded: OK".format(component, len(_config)))
     if config_file:
         if config_file.startswith("/"):
             config_path = config_file
         else:
             cwd = os.getcwd()
             config_path = cwd + "/" + config_file
-        _config.update(ConfigManager(path=config_path.replace('//', '/')).as_dict())
+        config.set_many({component: ConfigManager(path=config_path.replace('//', '/')).as_dict()})
         LOGGER.info("Setting configuration from {} for {} : OK".format(config_file, component))
 
     if config_etcd:
         if not config_etcd.get("keyspace"):
             raise Exception("etcd Keyspace is mandatory")
         try:
-            _config.update(ConfigManager(**config_etcd).as_dict())
+            config.set_many({component: ConfigManager(**config_etcd).as_dict()})
             LOGGER.info(
                 "Setting external configuration from {} for {} : OK".format(config_file, component))
         except Exception as exc:
@@ -42,14 +42,12 @@ for component in ["worker", "database", "gateway"]:
 
             LOGGER.exception(exc)
             raise exc
-    config[component].update(_config)
     LOGGER.info("Setting of the {} has been finished successfully".format(component))
 
-config_worker = config["worker"]
-config_db = config["database"]
-config_gateway = config["gateway"]
-_connection = config_worker["connection"]
-
-if not config_worker["connection"].get("broker_url"):
-    config_worker["connection"]["broker_url"] = "{protocol}://{username}:{password}@{host}:{port}"
-config_worker["broker"]["broker_url"] = config_worker["connection"]["broker_url"].format(**_connection)
+config.set("worker.broker.broker_url", config.get("worker.broker.broker_url").format(
+    protocol=config.get("worker.connection.protocol"),
+    username=config.get("worker.connection.username"),
+    password=config.get("worker.connection.password"),
+    host=config.get("worker.connection.host"),
+    port=config.get("worker.connection.port")))
+config.commit()

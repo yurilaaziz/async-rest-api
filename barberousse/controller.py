@@ -3,7 +3,7 @@ import logging
 
 from mongoengine import DoesNotExist
 
-from barberousse.config import env_config
+from barberousse.config import config
 from barberousse.persistences.task import Task as TaskModel
 from barberousse.worker import task_executor
 
@@ -12,7 +12,7 @@ class Controller:
     def __init__(self, async_mode=None, **kwargs):
         self.logger = logging.getLogger(__name__)
         if async_mode is None:
-            async_mode = not (int(env_config.get("standalone")) == 1)
+            async_mode = not (int(config.get("standalone")) == 1)
 
         self.async_mode = async_mode
         self.logger.info("Initializing controller in {} mode".format(

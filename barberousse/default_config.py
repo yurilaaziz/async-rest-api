@@ -36,7 +36,6 @@ DEFAULT_CONFIG = {
     "debug": 0,
     "worker": {
         "logging": LOGGING_CONFIG,
-
         "connection": {
             "username": "barberousse",
             "password": "barberousse",
@@ -47,6 +46,7 @@ DEFAULT_CONFIG = {
         "broker": {
             "ignore_result": False,
             "result_backend": "amqp",
+            "broker_url": "{protocol}://{username}:{password}@{host}:{port}",
             "task_routes": {
                 "barberousse.executor.Executor": {
                     "queue": "tasks"
