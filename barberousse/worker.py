@@ -8,8 +8,9 @@ from .config import config_worker as config
 
 try:
     logging.config.dictConfig(config.get('logging'))
-except:
-    logging.getLogger(__name__).info("Failed to set custom logging configuration")
+except Exception as exc:
+    logging.getLogger(__name__).error("Failed to set custom logging configuration")
+    logging.getLogger(__name__).exception(exc)
 connect_db()
 celery = Celery()
 celery.conf.update(**config.get('broker'))
