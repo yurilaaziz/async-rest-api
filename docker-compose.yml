@@ -1,28 +1,50 @@
 version: '2'
 services:
-    rabbit:
-        hostname: rabbit
+    broker:
+        hostname: broker
         image: rabbitmq:latest
         environment:
             - RABBITMQ_DEFAULT_USER=barberousse
             - RABBITMQ_DEFAULT_PASS=barberousse
         ports:
             - "5672:5672"
-#    celery -A barberousse.worker worker -l debug -Q tasks -n tasks
-#    worker:
-#        build:
-#            context: .
-#            dockerfile: dockerfiles/worker/Dockerfile
-#        volumes:
-#            - .:/app
-#        links:
-#            - rabbit
-#            - mongo
-#        depends_on:
-#            - rabbit
-#            - mongo
+
+    worker:
+        build:
+            context: .
+            dockerfile: dockerfiles/worker/Dockerfile
+        volumes:
+            - .:/app
+        links:
+            - broker
+            - database
+        depends_on:
+            - broker
+            - database
+        environment:
+          - BARBEROUSSE_WORKER_CONNECTION_HOST=broker
+          - BARBEROUSSE_DATABASE_CONNECTION_HOST=database
+    gateway:
+        build:
+            context: .
+            dockerfile: dockerfiles/gateway/Dockerfile
+        volumes:
+            - .:/app
+        links:
+            - broker
+            - database
+            - worker
+        depends_on:
+            - broker
+            - database
+            - worker
+        environment:
+          - BARBEROUSSE_WORKER_CONNECTION_HOST=broker
+          - BARBEROUSSE_DATABASE_CONNECTION_HOST=database
+        ports:
+            - "8000:8000"
     database:
-        hostname: mongo
+        hostname: database
         image: mongo:latest
         ports:
             - "27017:27017"
