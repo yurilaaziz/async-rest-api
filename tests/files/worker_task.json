@@ -1,16 +1,16 @@
 {
   "logging": {},
+  "connection": {
+    "username": "barbeblanche",
+    "password": "barbeblanche",
+    "host": "127.0.0.1",
+    "port": 5672,
+    "protocol": "amqp",
+    "broker_url": "{protocol}://{username}:{password}@{host}:{port}"
+  },
   "broker": {
     "ignore_result": false,
     "result_backend": "amqp",
-    "connection": {
-      "username": "barbeblanche",
-      "password": "barbeblanche",
-      "host": "127.0.0.1",
-      "port": 5673,
-      "protocol": "amqp",
-      "broker_url": "{protocol}://{username}:{password}@{host}:{port}"
-    },
     "task_routes": {
       "barberousse.executor.Executor": {
         "queue": "tasks"

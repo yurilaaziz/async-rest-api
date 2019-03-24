@@ -23,4 +23,4 @@ def test_set_configuration_file(cwd):
     from config42 import ConfigManager
     local_config = ConfigManager(path=config_path).as_dict()
     assert "broker_url" in config["worker"]["broker"]
-    assert str(local_config["broker"]["connection"]["port"]) in config["worker"]["broker"]["broker_url"]
+    assert str(local_config["connection"]["port"]) in config["worker"]["broker"]["broker_url"]

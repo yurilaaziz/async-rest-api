@@ -1,0 +1,36 @@
+version: '2'
+services:
+    rabbit:
+        hostname: rabbit
+        image: rabbitmq:latest
+        environment:
+            - RABBITMQ_DEFAULT_USER=barberousse
+            - RABBITMQ_DEFAULT_PASS=barberousse
+        ports:
+            - "5672:5672"
+#    celery -A barberousse.worker worker -l debug -Q tasks -n tasks
+#    worker:
+#        build:
+#            context: .
+#            dockerfile: dockerfiles/worker/Dockerfile
+#        volumes:
+#            - .:/app
+#        links:
+#            - rabbit
+#            - mongo
+#        depends_on:
+#            - rabbit
+#            - mongo
+    database:
+        hostname: mongo
+        image: mongo:latest
+        ports:
+            - "27017:27017"
+        environment:
+          - MONGO_INITDB_ROOT_USERNAME=barberousse
+          - MONGO_INITDB_ROOT_PASSWORD=barberousse
+        volumes:
+          - mongodb:/tmp/db
+
+volumes:
+  mongodb:
