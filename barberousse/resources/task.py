@@ -20,7 +20,7 @@ class Tasks(Resource):
         controller = Controller()
         return controller.get_tasks()
 
-    @namespace.doc(body=task_body)
+    @namespace.expect(task_body)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument("module", type=str, required=True)
@@ -44,7 +44,7 @@ class Tasks(Resource):
 
 @namespace.route('/tasks/<module>')
 class TaskModule(Resource):
-    @namespace.doc(body=module_body)
+    @namespace.expect(module_body)
     def post(self, module):
         args = request.json
         controller = Controller()

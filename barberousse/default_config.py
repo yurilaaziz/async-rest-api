@@ -45,7 +45,6 @@ DEFAULT_CONFIG = {
         },
         "broker": {
             "ignore_result": False,
-            "result_backend": "amqp",
             "broker_url": "{protocol}://{username}:{password}@{host}:{port}",
             "task_routes": {
                 "barberousse.executor.Executor": {
